@@ -18,6 +18,7 @@ import polygon.Polygon;
 import polygon.PolygonRenderer;
 import polygon.WireframePolygonRenderer;
 import shader.Shader;
+import shader.Light;
 import windowing.drawable.Drawable;
 import windowing.graphics.Color;
 import windowing.graphics.Dimensions;
@@ -29,6 +30,7 @@ public class SimpInterpreter {
 	private static final int NUM_TOKENS_FOR_UNCOLORED_VERTEX = 3;
 	private static final char COMMENT_CHAR = '#';
 	private RenderStyle renderStyle;
+	private ShaderStyle shaderStyle; //assn4
 
 	private static Transformation CTM;
 	private static Transformation worldToCamera; //assn3 camera; world to camera
@@ -49,6 +51,9 @@ public class SimpInterpreter {
 	private Stack<LineBasedReader> readerStack;
 
 	private static Color defaultColor = Color.WHITE;
+	private double kSpec;
+	private double p; //specular exponent
+
 	private Color ambientLight = Color.BLACK;
 
 	private Drawable drawable;
@@ -65,6 +70,12 @@ public class SimpInterpreter {
 		WIREFRAME;
 	}
 
+	public enum ShaderStyle { //assn4
+		PHONG,
+		GOURAUD,
+		FLAT;
+	}
+
 	public SimpInterpreter(String filename,
 			Drawable drawable,
 			RendererTrio renderers) {
@@ -74,10 +85,14 @@ public class SimpInterpreter {
 		this.filledRenderer = renderers.getFilledRenderer();
 		this.wireframeRenderer = renderers.getWireframeRenderer();
 		defaultColor = Color.WHITE;
+		kSpec = 0.3;
+		p = 8;
 
 		reader = new LineBasedReader(filename);
 		readerStack = new Stack<>(); //already here so I'll use this
 		renderStyle = RenderStyle.FILLED;
+		shaderStyle = ShaderStyle.PHONG;
+
 		CTM = Transformation.identity(); //already here so using this
 		makeWorldToScreenTransform(drawable.getDimensions());
 		matrixStack = new Stack<>(); // I put this in
@@ -108,6 +123,7 @@ public class SimpInterpreter {
 
 		worldToScreen = Transformation.matrixMultiply(worldToScreen, transMatrix);
 		CTM = Transformation.matrixMultiply(worldToScreen, CTM);
+
 	}
 
 	public void interpret() {
@@ -152,6 +168,9 @@ public class SimpInterpreter {
 		case "obj" :		interpretObj(tokens);		break;
 
 		case "light" : interpretLight(tokens); break;
+		case "phong" : phong(); break;
+		case "gouraud" : gouraud(); break;
+		case "flat" : flat(); break;
 
 		default :
 			System.err.println("bad input line: " + tokens);
@@ -595,9 +614,11 @@ public class SimpInterpreter {
 		double b = cleanNumber(tokens[3]);
 
 		double k = cleanNumber(tokens[4]); //assn4
-		double k = cleanNumber(tokens[5]);
+		double p = cleanNumber(tokens[5]);
 
 		defaultColor = new Color(r, g, b);
+		kSpec = k;
+		this.p = p;
 	}
 
 	public void interpretDepth(String[] tokens){
@@ -642,9 +663,26 @@ public class SimpInterpreter {
 		double g = cleanNumber(tokens[2]);
 		double b = cleanNumber(tokens[3]);
 
-		double A = cleanNumber(tokens[4]);
+		double A = cleanNumber(tokens[4]); //attenuation constants
 		double B = cleanNumber(tokens[5]);
+		Color lightIntensity = new Color(r, g, b);
+		Vertex3D lightPoint = new Vertex3D(0.0, 0.0, 0.0, lightIntensity);
 
+		lightPoint = Transformation.vectorMultiply(CTM.getMatrix(), lightPoint);
+		lightPoint = transformToCamera(lightPoint); //maybe don't use ?
+
+		Point3DH lightPoint3D = new Point3DH(lightPoint.getX(), lightPoint.getY(), lightPoint.getZ());
+		Light newLight = new Light(lightIntensity, lightPoint3D, A, B);
 		//finish later
+	}
+
+	private void phong(){
+		shaderStyle = ShaderStyle.PHONG;
+	}
+	private void gouraud(){
+		shaderStyle = ShaderStyle.GOURAUD;
+	}
+	private void flat(){
+		shaderStyle = ShaderStyle.FLAT;
 	}
 }
