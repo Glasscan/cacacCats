@@ -48,8 +48,9 @@ public class Lighting{
         redSum = redSum + (lightIntensity.getR()*atten)*(kDiffuse.getR()*NdotL + kSpec*Math.pow(VdotR, specExp));
         greenSum = greenSum + (lightIntensity.getG()*atten)*(kDiffuse.getG()*NdotL + kSpec*Math.pow(VdotR, specExp));
         blueSum = blueSum + (lightIntensity.getB()*atten)*(kDiffuse.getB()*NdotL + kSpec*Math.pow(VdotR, specExp));
-
-        System.out.println(" Normal: " + normal +  "\n VectorV: " + vectorV + "\n vectorR: " + vectorR + "\n VectorL: " + vectorL);
+        System.out.println(NdotL);
+        System.out.println(" L: " + lightPoint + " \n Object: " + CSP);
+        System.out.println(" Normal: "+ normal + "\n VectorV: " + vectorV + "\n vectorR: " + vectorR + "\n VectorL: " + vectorL);
         System.out.println("-------------------");
       }
       redSum = naturalRed + redSum;
@@ -101,9 +102,8 @@ public class Lighting{
   }
   private static double dotProduct(Point3DH v1, Point3DH v2){
     double product = 0.0;
-    product = product + v1.getX()*v2.getX();
-    product = product + v1.getY()*v2.getY();
-    product = product + v1.getZ()*v2.getZ();
+    product = v1.getX()*v2.getX() + v1.getY()*v2.getY() + v1.getZ()*v2.getZ();
+
     if(product < 0.0) product = 0.0;//negative dot-product treated as 0 (lecture 16)
     return product;
   }

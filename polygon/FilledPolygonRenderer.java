@@ -56,11 +56,11 @@ public class FilledPolygonRenderer implements PolygonRenderer{
 			p3 = temp;
 		}
 
-		faceShader.shade(polygon);
+		Polygon newPolygon = faceShader.shade(Polygon.make(p1, p2, p3)); //rearrange the order
 
-		p1 = vertexShader.shade(polygon, p1);
-		p2 = vertexShader.shade(polygon, p2);
-		p3 = vertexShader.shade(polygon, p3);
+		p1 = vertexShader.shade(newPolygon, p1);
+		p2 = vertexShader.shade(newPolygon, p2);
+		p3 = vertexShader.shade(newPolygon, p3);
 
 		Lerper leftLerp = new Lerper(p1, p2);
 		Lerper rightLerp = new Lerper(p1, p3);
@@ -68,7 +68,7 @@ public class FilledPolygonRenderer implements PolygonRenderer{
 		double rightBottom = Math.abs(p3.getY() - p1.getY());
 
 		//fraw the first pixel
-		drawable.setPixel(p1.getIntX(), p1.getIntY(), p1.getIntZ(), p1.getColor().asARGB());
+		drawable.setPixel(p1.getIntX(), p1.getIntY(), p1.getIntZ(), pixelShader.shade(newPolygon, p1).asARGB());
 
 		double fx = 0.0;
 		double fy = 0.0;
@@ -110,7 +110,7 @@ public class FilledPolygonRenderer implements PolygonRenderer{
 
 			for(int i = 0; i < Math.abs(dx); i++){
 				Color color = new Color(red*(1.0/csz), green*(1.0/csz), blue*(1.0/csz));
-				color = pixelShader.shade(polygon, p1);
+				color = pixelShader.shade(newPolygon, p1);
 				drawable.setPixel((int)Math.round(fx), (int)Math.round(fy), 1.0/csz, color.asARGB());
 
 				fx = fx + 1.0; //move over to the right so ADD the slopes

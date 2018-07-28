@@ -442,16 +442,21 @@ public class SimpInterpreter {
 
 	//ASSN3: since we aren't using parallel projections anymore
 	private void polygon(Vertex3D p1, Vertex3D p2, Vertex3D p3) {
+
 		Vertex3D screenP1 = transformToCamera(p1);
 		Vertex3D screenP2 = transformToCamera(p2);
 		Vertex3D screenP3 = transformToCamera(p3);
+
 			if(Math.abs(screenP1.getZ()) + Math.abs(screenP2.getZ()) + Math.abs(screenP3.getZ()) < 20.0){
 				return;
 			}
-
 		screenP1 = screenP1.replaceColor(defaultColor); //temporary solution
 		screenP2 = screenP2.replaceColor(defaultColor);
 		screenP3 = screenP3.replaceColor(defaultColor);
+
+		screenP1.setCameraPoint(p1); //assn4
+		screenP2.setCameraPoint(p2);
+		screenP3.setCameraPoint(p3);
 
 		Polygon newPolygon = Polygon.make(screenP1, screenP2, screenP3);
 		Vertex3D[] list;
@@ -674,7 +679,7 @@ public class SimpInterpreter {
 		Vertex3D lightPoint = new Vertex3D(0.0, 0.0, 0.0, lightIntensity);
 
 		lightPoint = Transformation.vectorMultiply(CTM.getMatrix(), lightPoint);
-		lightPoint = transformToCamera(lightPoint); //maybe don't use ?
+		//lightPoint = transformToCamera(lightPoint); //maybe don't use ?
 
 		Point3DH lightPoint3D = new Point3DH(lightPoint.getX(), lightPoint.getY(), lightPoint.getZ());
 		Light newLight = new Light(lightIntensity, lightPoint3D, A, B);

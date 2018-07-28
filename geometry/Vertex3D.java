@@ -4,12 +4,14 @@ import windowing.graphics.Color;
 
 public class Vertex3D implements Vertex {
 	protected Point3DH point; //windowPoint
+	protected Point3DH cameraPoint;
 	protected Color color;
 	private boolean hasNormal = false; //assn4
 
 	public Vertex3D(Point3DH point, Color color) {
 		super();
 		this.point = point;
+		this.cameraPoint = point;
 		this.color = color;
 		this.hasNormal = false;
 	}
@@ -89,5 +91,18 @@ public class Vertex3D implements Vertex {
 
 	public boolean hasNormal(){
 		return hasNormal;
+	}
+
+	public void setCameraPoint(){
+		this.cameraPoint = this.point;
+	}
+	public void setCameraPoint(Vertex3D old){
+		this.cameraPoint = old.getPoint3D();
+	}
+	public Point3DH getCameraPoint(){
+		return cameraPoint;
+	}
+	public Vertex3D useCameraSpace(){
+		return new Vertex3D(this.getCameraPoint(), this.getColor());
 	}
 }

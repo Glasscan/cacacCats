@@ -22,15 +22,18 @@ public class Shaders{
 
   public static Polygon FlatFaceShader(Polygon polygon){
     Point3DH normal;
-    Vertex3D p1 = polygon.get(0);
-    Vertex3D p2 = polygon.get(1);
-    Vertex3D p3 = polygon.get(2);
 
+    Vertex3D p1 = polygon.get(0).useCameraSpace(); //magic
+    Vertex3D p2 = polygon.get(1).useCameraSpace();
+    Vertex3D p3 = polygon.get(2).useCameraSpace();
+
+    //System.out.println(p1 + " \n " + p2 + " \n " + p3);
     //get the center point
     double centerX = (p1.getX() + p2.getX() + p3.getX())/3.0;
     double centerY = (p1.getY() + p2.getY() + p3.getY())/3.0;
     double centerZ = (p1.getZ() + p2.getZ() + p3.getZ())/3.0;
     Point3DH center = new Point3DH(centerX, centerY, centerZ);
+
     if(p1.hasNormal()){
       return polygon; //finish last
     }
@@ -39,7 +42,7 @@ public class Shaders{
       Point3DH vRight = calculateVectorDifference(p1, p3);
 
       normal = crossProduct(vLeft, vRight); //confirmed that normal is calculated correctly
-
+      //System.out.println(p1 + " \n" + p2 + " \n" + p3);
       Color newColor = Lighting.light(new Vertex3D(center, p1.getColor()), p1.getColor(), normal);
       polygon.setShadeColor(newColor);
     }
