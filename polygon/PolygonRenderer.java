@@ -1,6 +1,9 @@
 package polygon;
 
 import shader.Shader;
+import shader.FaceShader;
+import shader.VertexShader;
+import shader.PixelShader;
 import windowing.drawable.Drawable;
 
 public interface PolygonRenderer {

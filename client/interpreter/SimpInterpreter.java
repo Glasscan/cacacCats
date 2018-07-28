@@ -17,8 +17,12 @@ import geometry.Transformation;
 import polygon.Polygon;
 import polygon.PolygonRenderer;
 import polygon.WireframePolygonRenderer;
+
 import shader.Shader;
+import shader.Shaders;
 import shader.Light;
+import shader.Lighting;
+
 import windowing.drawable.Drawable;
 import windowing.graphics.Color;
 import windowing.graphics.Dimensions;
@@ -30,7 +34,7 @@ public class SimpInterpreter {
 	private static final int NUM_TOKENS_FOR_UNCOLORED_VERTEX = 3;
 	private static final char COMMENT_CHAR = '#';
 	private RenderStyle renderStyle;
-	private ShaderStyle shaderStyle; //assn4
+	public static ShaderStyle shaderStyle; //assn4
 
 	private static Transformation CTM;
 	private static Transformation worldToCamera; //assn3 camera; world to camera
@@ -51,10 +55,10 @@ public class SimpInterpreter {
 	private Stack<LineBasedReader> readerStack;
 
 	private static Color defaultColor = Color.WHITE;
-	private double kSpec;
-	private double p; //specular exponent
+	private static double kSpec;
+	private static double p; //specular exponent
 
-	private Color ambientLight = Color.BLACK;
+	private static Color ambientLight = Color.BLACK;
 
 	private Drawable drawable;
 	private Drawable depthCueingDrawable;
@@ -452,7 +456,7 @@ public class SimpInterpreter {
 		Polygon newPolygon = Polygon.make(screenP1, screenP2, screenP3);
 		Vertex3D[] list;
 		int listSize = 0;
-		//System.out.println(screenP1 + " " + screenP2 + " " + screenP3);
+		//System.out.println(screenP1 + " \n" + screenP2 + " \n" + screenP3);
 
 		switch(renderStyle){
 			case WIREFRAME: //don't bother doing anything special
@@ -467,7 +471,8 @@ public class SimpInterpreter {
 						lineRenderer.drawLine(list[listSize - 1], list[0], drawable); //last line
 					}
 					else
-						wireframeRenderer.drawPolygon(newPolygon, depthCueingDrawable, ambientShader = c -> ambientLight.multiply(c));
+						wireframeRenderer.drawPolygon(newPolygon, depthCueingDrawable,
+							ambientShader = c -> ambientLight.multiply(c));
 				break;
 			default:
 				list = Clipper.polygonClip(newPolygon); //amazing
@@ -481,7 +486,7 @@ public class SimpInterpreter {
 					}
 				}
 				else
-					filledRenderer.drawPolygon(newPolygon, depthCueingDrawable, ambientShader = c -> ambientLight.multiply(c));
+				filledRenderer.drawPolygon(newPolygon, depthCueingDrawable, ambientShader = c -> ambientLight.multiply(c));
 				break;
 		}
 	}
@@ -684,5 +689,15 @@ public class SimpInterpreter {
 	}
 	private void flat(){
 		shaderStyle = ShaderStyle.FLAT;
+	}
+
+	public static Color getAmbient(){
+		return ambientLight;
+	}
+	public static double getKSpec(){
+		return kSpec;
+	}
+	public static double getSpecExp(){
+		return p;
 	}
 }

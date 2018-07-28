@@ -1,34 +1,66 @@
 package polygon;
 
 import geometry.Vertex3D;
+import client.interpreter.SimpInterpreter;
 import line.DDALineRenderer;
 import shader.Shader;
 import windowing.drawable.Drawable;
 import windowing.graphics.Color;
 
 import shader.FaceShader;
-import shader.PixelShader;
 import shader.VertexShader;
+import shader.PixelShader;
+import shader.Shaders;
 
 // assumes polygon is ccw.
 public class FilledPolygonRenderer implements PolygonRenderer{
 	private FilledPolygonRenderer(){}
 
-	public void drawPolygon(Polygon polygon, Drawable drawable, Shader vertexShader) {
+	public void drawPolygon(Polygon polygon, Drawable drawable, Shader ambientShader) {
+
+		FaceShader faceShader = c -> Shaders.NullFaceShader(c);
+		VertexShader vertexShader = (d, e) -> Shaders.NullVertexShader(d, e);
+		PixelShader pixelShader = (f, g) -> Shaders.NullPixelShader(f, g);
 
 		Vertex3D p1 = getP1(polygon);
 		Vertex3D p2 = getP2(polygon, p1);
 		Vertex3D p3 = getP3(polygon, p1, p2);
 
-		p1 = p1.replaceColor(vertexShader.shade(p1.getColor())); //will be black if there is no ambient light
-		p2 = p2.replaceColor(vertexShader.shade(p2.getColor()));
-		p3 = p3.replaceColor(vertexShader.shade(p3.getColor()));
+		// must update for assn4
+/*
+		p1 = p1.replaceColor(ambientShader.shade(p1.getColor()));
+		p2 = p2.replaceColor(ambientShader.shade(p2.getColor()));
+		p3 = p3.replaceColor(ambientShader.shade(p3.getColor()));
+*/
+		switch(SimpInterpreter.shaderStyle){
+		case FLAT:
+			faceShader = c -> Shaders.FlatFaceShader(c);
+			vertexShader = (d, e) -> Shaders.NullVertexShader(d, e);
+			pixelShader = (f, g) -> Shaders.FlatPixelShader(f, g);
+			break;
+		case GOURAUD:
+			faceShader = c -> Shaders.NullFaceShader(c);
+			vertexShader = (d, e) -> Shaders.GouraudVertexShader(d, e);
+			pixelShader = (f, g) -> Shaders.GouraudPixelShader(f, g);
+			break;
+		default: //PHONG
+			faceShader = c -> Shaders.NullFaceShader(c);
+			vertexShader = (d, e) -> Shaders.PhongVertexShader(d, e);
+			pixelShader = (f, g) -> Shaders.PhongPixelShader(f, g);
+			break;
+		}
 
 		if(p1.getY() == p3.getY()){ //annoying edge case
 			Vertex3D temp = p2;
 			p2 = p3;
 			p3 = temp;
 		}
+
+		faceShader.shade(polygon);
+
+		p1 = vertexShader.shade(polygon, p1);
+		p2 = vertexShader.shade(polygon, p2);
+		p3 = vertexShader.shade(polygon, p3);
 
 		Lerper leftLerp = new Lerper(p1, p2);
 		Lerper rightLerp = new Lerper(p1, p3);
@@ -78,6 +110,7 @@ public class FilledPolygonRenderer implements PolygonRenderer{
 
 			for(int i = 0; i < Math.abs(dx); i++){
 				Color color = new Color(red*(1.0/csz), green*(1.0/csz), blue*(1.0/csz));
+				color = pixelShader.shade(polygon, p1);
 				drawable.setPixel((int)Math.round(fx), (int)Math.round(fy), 1.0/csz, color.asARGB());
 
 				fx = fx + 1.0; //move over to the right so ADD the slopes
