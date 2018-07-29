@@ -48,10 +48,10 @@ public class Lighting{
         redSum = redSum + (lightIntensity.getR()*atten)*(kDiffuse.getR()*NdotL + kSpec*Math.pow(VdotR, specExp));
         greenSum = greenSum + (lightIntensity.getG()*atten)*(kDiffuse.getG()*NdotL + kSpec*Math.pow(VdotR, specExp));
         blueSum = blueSum + (lightIntensity.getB()*atten)*(kDiffuse.getB()*NdotL + kSpec*Math.pow(VdotR, specExp));
-        System.out.println(NdotL);
-        System.out.println(" L: " + lightPoint + " \n Object: " + CSP);
+      /*  System.out.println(" L: " + lightPoint + " \n Object: " + CSP);
         System.out.println(" Normal: "+ normal + "\n VectorV: " + vectorV + "\n vectorR: " + vectorR + "\n VectorL: " + vectorL);
         System.out.println("-------------------");
+      */
       }
       redSum = naturalRed + redSum;
       greenSum = naturalGreen + greenSum;

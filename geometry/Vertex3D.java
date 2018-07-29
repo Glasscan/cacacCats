@@ -7,6 +7,7 @@ public class Vertex3D implements Vertex {
 	protected Point3DH cameraPoint;
 	protected Color color;
 	private boolean hasNormal = false; //assn4
+	protected Point3DH normal;
 
 	public Vertex3D(Point3DH point, Color color) {
 		super();
@@ -92,7 +93,13 @@ public class Vertex3D implements Vertex {
 	public boolean hasNormal(){
 		return hasNormal;
 	}
-
+	public Point3DH getNormal(){
+		return normal;
+	}
+	public void setNormal(Point3DH normal){
+		this.normal = normal;
+		this.hasNormal = true;
+	}
 	public void setCameraPoint(){
 		this.cameraPoint = this.point;
 	}
