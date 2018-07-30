@@ -102,6 +102,7 @@ public class SimpInterpreter {
 		matrixStack = new Stack<>(); // I put this in
 		clipper = new Clipper(depthCueingDrawable);
 
+		Light.lightListClear(); //reset the lighting
 	}
 //worldToScreen is to be updated;
 //This is M (V <- W)
@@ -303,7 +304,7 @@ public class SimpInterpreter {
 		Vertex3D oldP2 = vertices[1];
 		double x, y, z = 0.0;
 		double[][] transform = CTM.getMatrix();
-		System.out.println(tokens.length);
+
 		newP1 = Transformation.vectorMultiply(transform, oldP1);
 		newP2 = Transformation.vectorMultiply(transform, oldP2);
 
@@ -338,6 +339,9 @@ public class SimpInterpreter {
 	 	newColor = newP3.getColor().scale(1 - newP3.getZ()/(-200.0));
 		newP3 = newP3.replaceColor(newColor);
 
+		if(newP1.hasNormal()) newP1.setNormal(unitVector(newP1.getNormal()));
+		if(newP2.hasNormal()) newP2.setNormal(unitVector(newP2.getNormal()));
+		if(newP3.hasNormal()) newP3.setNormal(unitVector(newP3.getNormal()));
 		polygon(newP1, newP2, newP3);
 		// TODO: finish this method
 	}
@@ -349,22 +353,30 @@ public class SimpInterpreter {
 		Vertex3D oldP3 = p3;
 
 		double[][] transform = CTM.getMatrix();
+		double[][] transformInverse = Transformation.inverse(CTM).getMatrix();
 
 		//for p1 (hardcoding)
 		newP1 = Transformation.vectorMultiply(transform, oldP1);
 		newP2 = Transformation.vectorMultiply(transform, oldP2);
 		newP3 = Transformation.vectorMultiply(transform, oldP3);
+		//new for assn4
 
-		//update the colors
-		Color newColor = newP1.getColor().scale(1 - newP1.getZ()/(-200.0));
-		newP1 = newP1.replaceColor(newColor);
-		newColor = newP2.getColor().scale(1 - newP2.getZ()/(-200.0));
-		newP2 = newP2.replaceColor(newColor);
-		newColor = newP3.getColor().scale(1 - newP3.getZ()/(-200.0));
-		newP3 = newP3.replaceColor(newColor);
+		if(p1.hasNormal()) {
+			newP1.setNormal(unitVector(newP1.getNormal()));
+			newP1.setNormal(Transformation.normalVectorMultiply(newP1.getNormal(), transformInverse));
+		}
+		if(p2.hasNormal()) {
+			newP2.setNormal(unitVector(newP2.getNormal()));
+			newP2.setNormal(Transformation.normalVectorMultiply(newP2.getNormal(), transformInverse));
+		}
+		if(p3.hasNormal()) {
+			newP3.setNormal(unitVector(newP3.getNormal()));
+			newP3.setNormal(Transformation.normalVectorMultiply(newP3.getNormal(), transformInverse));
+		}
+
 
 		polygon(newP1, newP2, newP3);
-		// TODO: finish this method
+
 	}
 
 	public Vertex3D[] interpretVertices(String[] tokens, int numVertices, int startingIndex) {
@@ -436,7 +448,7 @@ public class SimpInterpreter {
 	private void line(Vertex3D p1, Vertex3D p2) {
 		Vertex3D screenP1 = transformToCamera(p1);
 		Vertex3D screenP2 = transformToCamera(p2);
-		System.out.println(p1 + " " + p2);
+
 		lineRenderer.drawLine(screenP1, screenP2, drawable);
 	}
 
@@ -450,9 +462,6 @@ public class SimpInterpreter {
 			if(Math.abs(screenP1.getZ()) + Math.abs(screenP2.getZ()) + Math.abs(screenP3.getZ()) < 20.0){
 				return;
 			}
-		screenP1 = screenP1.replaceColor(defaultColor); //temporary solution
-		screenP2 = screenP2.replaceColor(defaultColor);
-		screenP3 = screenP3.replaceColor(defaultColor);
 
 		screenP1.setCameraPoint(p1); //assn4
 		screenP2.setCameraPoint(p2);
@@ -461,6 +470,7 @@ public class SimpInterpreter {
 		Polygon newPolygon = Polygon.make(screenP1, screenP2, screenP3);
 		Vertex3D[] list;
 		int listSize = 0;
+
 		//System.out.println(screenP1 + " \n" + screenP2 + " \n" + screenP3);
 
 		switch(renderStyle){
@@ -485,13 +495,16 @@ public class SimpInterpreter {
 
 				listSize = list.length;
 				if(listSize > 3){
+
 					for(int i = 0; i < listSize - 2; i++){
 						newPolygon = Polygon.make(list[0], list[i+1], list[i+2]);
+
 						filledRenderer.drawPolygon(newPolygon, depthCueingDrawable, ambientShader = c -> ambientLight.multiply(c));
 					}
 				}
-				else
-				filledRenderer.drawPolygon(newPolygon, depthCueingDrawable, ambientShader = c -> ambientLight.multiply(c));
+				else{
+					filledRenderer.drawPolygon(newPolygon, depthCueingDrawable, ambientShader = c -> ambientLight.multiply(c));
+				}
 				break;
 		}
 	}
@@ -508,6 +521,8 @@ public class SimpInterpreter {
 		//the following is the equation for the simple perspective transformation
 		Vertex3D newVertex = Transformation.vectorMultiply(cameraToScreen.getMatrix(), vertex);
  		newVertex = new Vertex3D(newVertex.getX()/(z/d), newVertex.getY()/(z/d), z, vertex.getColor());
+		if(vertex.hasNormal()) newVertex.setNormal(vertex.getNormal());
+
 		return newVertex;
 		}
 	}
@@ -679,11 +694,10 @@ public class SimpInterpreter {
 		Vertex3D lightPoint = new Vertex3D(0.0, 0.0, 0.0, lightIntensity);
 
 		lightPoint = Transformation.vectorMultiply(CTM.getMatrix(), lightPoint);
-		//lightPoint = transformToCamera(lightPoint); //maybe don't use ?
 
 		Point3DH lightPoint3D = new Point3DH(lightPoint.getX(), lightPoint.getY(), lightPoint.getZ());
 		Light newLight = new Light(lightIntensity, lightPoint3D, A, B);
-		//finish later
+
 	}
 
 	private void phong(){
@@ -694,6 +708,14 @@ public class SimpInterpreter {
 	}
 	private void flat(){
 		shaderStyle = ShaderStyle.FLAT;
+	}
+	private Point3DH unitVector(Point3DH vector){
+		double magnitude = Math.sqrt(Math.pow(vector.getX(), 2) + Math.pow(vector.getY(), 2) + Math.pow(vector.getZ(), 2));
+		double x = vector.getX()/magnitude;
+		double y = vector.getY()/magnitude;
+		double z = vector.getZ()/magnitude;
+		if(magnitude == 0) x = y = z = 0.0;
+		return new Point3DH(x, y, z);
 	}
 
 	public static Color getAmbient(){

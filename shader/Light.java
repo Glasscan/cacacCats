@@ -41,4 +41,7 @@ public class Light{
     return lightList;
   }
 
+  public static void lightListClear(){
+    lightList.clear();
+  }
 }

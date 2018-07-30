@@ -34,7 +34,7 @@ public class Shaders{
     double centerZ = (p1.getZ() + p2.getZ() + p3.getZ())/3.0;
     Point3DH center = new Point3DH(centerX, centerY, centerZ);
 
-    if(p1.hasNormal()){ //if p1 has a normal then they should all have normals
+    if(p1.hasNormal() && p2.hasNormal() && p3.hasNormal()){
        normal = averageNormal(p1.getNormal(), p2.getNormal(), p3.getNormal());
     }
     else{
@@ -58,7 +58,7 @@ public class Shaders{
     Vertex3D p2 = polygon.get(1).useCameraSpace();
     Vertex3D p3 = polygon.get(2).useCameraSpace();
 
-    if(p1.hasNormal()){ //if p1 has a normal then they should all have normals
+    if(p1.hasNormal() && p2.hasNormal() && p3.hasNormal()){ //if p1 has a normal then they should all have normals
        normal = averageNormal(p1.getNormal(), p2.getNormal(), p3.getNormal());
     }
     else{
@@ -80,23 +80,21 @@ public class Shaders{
     Vertex3D p2 = polygon.get(1).useCameraSpace();
     Vertex3D p3 = polygon.get(2).useCameraSpace();
 
-    if(p1.hasNormal()){ //if p1 has a normal then they should all have normals
-       normal = averageNormal(p1.getNormal(), p2.getNormal(), p3.getNormal());
+    if(point.hasNormal()){
+       normal = point.getNormal();
     }
     else{
       Point3DH vLeft = calculateVectorDifference(p1, p2);
       Point3DH vRight = calculateVectorDifference(p1, p3);
 
       normal = crossProduct(vLeft, vRight);
-      //System.out.println(p1 + " \n" + p2 + " \n" + p3);
-
     }
     Vertex3D tempVertex = point.useCameraSpace();
 
     Color newColor = Lighting.light(tempVertex, tempVertex.getColor(), normal);
-    point.setNormal(normal);
     point = point.replaceColor(newColor);
-
+    point.setNormal(normal);
+    point.setCameraPoint(tempVertex);
     return point;
   }
 
@@ -107,17 +105,17 @@ public class Shaders{
     Vertex3D p2 = polygon.get(1).useCameraSpace();
     Vertex3D p3 = polygon.get(2).useCameraSpace();
 
-    if(p1.hasNormal()){ //if p1 has a normal then they should all have normals
-       normal = averageNormal(p1.getNormal(), p2.getNormal(), p3.getNormal());
+    if(point.hasNormal()){
+       normal = point.getNormal();
     }
     else{
+
       Point3DH vLeft = calculateVectorDifference(p1, p2);
       Point3DH vRight = calculateVectorDifference(p1, p3);
 
       normal = crossProduct(vLeft, vRight);
     }
     point.setNormal(normal);
-
     return point;
   }
 
@@ -132,7 +130,9 @@ public class Shaders{
     return point.getColor();
   }
   public static Color PhongPixelShader(Polygon polygon, Vertex3D point){
-    return point.getColor();
+    Vertex3D tempVertex = point.useCameraSpace();
+    Color newColor = Lighting.light(tempVertex, point.getColor(), point.getNormal());
+    return newColor;
   }
 
   //built in subtract function exists

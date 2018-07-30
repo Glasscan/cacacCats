@@ -161,7 +161,18 @@ public class Transformation {
     double y = (vector.getX()*transform[1][0]) + (vector.getY()*transform[1][1]) + (vector.getZ()*transform[1][2]) + (transform[1][3]);
     double z = (vector.getX()*transform[2][0]) + (vector.getY()*transform[2][1]) + (vector.getZ()*transform[2][2]) + (transform[2][3]);
     Vertex3D newVector = new Vertex3D(x, y, z, vector.getColor());
+    if(vector.hasNormal()) newVector.setNormal(vector.getNormal());
     return newVector;
+  }
+
+  //assn4 right multiply
+  public static Point3DH normalVectorMultiply(Point3DH normal, double[][] transform){
+    double x = normal.getX()*transform[0][0] + normal.getY()*transform[1][0] + normal.getZ()*transform[2][0];
+    double y = normal.getX()*transform[0][1] + normal.getY()*transform[1][1] + normal.getZ()*transform[2][1];
+    double z = normal.getX()*transform[0][2] + normal.getY()*transform[1][2] + normal.getZ()*transform[2][2];
+
+    Point3DH newPoint = new Point3DH(x, y, z);
+    return newPoint;
   }
 
   public void printMatrix(){

@@ -58,6 +58,8 @@ class ObjReader {
 		this.objNormals = new ArrayList<Point3DH>();
 		this.objFaces = new ArrayList<ObjFace>();
 
+		objVertices.add(new Vertex3D(0.0, 0.0, 0.0, Color.BLACK));
+		objNormals.add(new Point3DH(0.0, 0.0, 0.0));
 	}
 
 	public void render(SimpInterpreter SimpInterpreter) {
@@ -65,11 +67,17 @@ class ObjReader {
 		int index;
 		int vertexIndex, textureIndex, normalIndex;
 		ArrayList<Vertex3D> polygons = new ArrayList<>(); //a more convenient list for the vertices
-		Vertex3D p1, p2, p3;
+		Vertex3D p1, p2, p3, temp;
+		Point3DH tempNormal;
+
 		for(i = 0; i < objFaces.size(); i++){ //objFaces.get(i) is a face with j vertices
 			for(j = 0; j < objFaces.get(i).size(); j++){
-				vertexIndex = objFaces.get(i).get(j).getVertexIndex() - 1;
-				polygons.add(objVertices.get(vertexIndex));
+				vertexIndex = objFaces.get(i).get(j).getVertexIndex();
+				normalIndex = objFaces.get(i).get(j).getNormalIndex();
+				temp = objVertices.get(vertexIndex);
+				temp.setNormal(objNormals.get(normalIndex));
+
+				polygons.add(temp);
 			}
 			p1 = polygons.get(0);
 			for(j = 0; j < polygons.size() - 2; j++){
@@ -130,6 +138,7 @@ class ObjReader {
 	private void interpretObjFace(String[] tokens) {
 		ObjFace face = new ObjFace();
 		int i;
+
 		for(i = 1; i<tokens.length; i++) {
 			String token = tokens[i];
 			String[] subtokens = token.split("/");
@@ -138,12 +147,10 @@ class ObjReader {
 			int textureIndex = objIndex(subtokens, 1, 0);
 			int normalIndex  = objIndex(subtokens, 2, objNormals.size());
 
-			// TODO:  //adding the vertices to to ObjFace
 			ObjVertex newObjVertex = new ObjVertex(vertexIndex, textureIndex, normalIndex);
 			face.add(newObjVertex);
 		}
 		objFaces.add(face);
-		// TODO: so I did it.
 	}
 
 	private int objIndex(String[] subtokens, int tokenIndex, int baseForNegativeIndices) {
@@ -151,6 +158,7 @@ class ObjReader {
 		// use Integer.parseInt() to get the integer value of the index.
 		// Be sure to handle both positive and negative indices.
 		int subIndex;
+		if(subtokens.length <= tokenIndex) return 0;
 		if(subtokens[tokenIndex] == null || subtokens[tokenIndex].isEmpty()) {return 0;}
 		else{
 			if(Integer.parseInt(subtokens[tokenIndex]) < 0){ //negative 1-indexing

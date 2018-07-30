@@ -16,6 +16,13 @@ public class Vertex3D implements Vertex {
 		this.color = color;
 		this.hasNormal = false;
 	}
+	public Vertex3D(Point3DH point, Color color, Point3DH cameraPoint) {
+		super();
+		this.point = point;
+		this.cameraPoint = cameraPoint;
+		this.color = color;
+		this.hasNormal = false;
+	}
 	public Vertex3D(double x, double y, double z, Color color) {
 		this(new Point3DH(x, y, z), color);
 	}
@@ -106,10 +113,15 @@ public class Vertex3D implements Vertex {
 	public void setCameraPoint(Vertex3D old){
 		this.cameraPoint = old.getPoint3D();
 	}
+	public void setCameraPoint(Point3DH cameraPoint){
+		this.cameraPoint = cameraPoint;
+	}
 	public Point3DH getCameraPoint(){
 		return cameraPoint;
 	}
 	public Vertex3D useCameraSpace(){
-		return new Vertex3D(this.getCameraPoint(), this.getColor());
+		Vertex3D newVertex = new Vertex3D(this.getCameraPoint(), this.getColor());
+		if(hasNormal) newVertex.setNormal(this.normal);
+		return newVertex;
 	}
 }

@@ -1,6 +1,7 @@
 package polygon;
 
 import geometry.Vertex3D;
+import geometry.Point3DH;
 import client.interpreter.SimpInterpreter;
 import line.DDALineRenderer;
 import shader.Shader;
@@ -63,7 +64,6 @@ public class FilledPolygonRenderer implements PolygonRenderer{
 		p2 = vertexShader.shade(newPolygon, p2);
 		p3 = vertexShader.shade(newPolygon, p3);
 
-
 		newPolygon = Polygon.make(p1, p2, p3);
 		//transfer the color into the new polygon (Flat only; Does nothing in Phong/Gouraud)
 		newPolygon.setShadeColor(tempShadeColor);
@@ -89,7 +89,11 @@ public class FilledPolygonRenderer implements PolygonRenderer{
 		double redSlope;
 		double greenSlope;
 		double blueSlope;
+		boolean hasNormal = p1.hasNormal();
 
+//assn4
+double normalX, normalY, normalZ, cameraX, cameraY, cameraZ;
+double normalXSlope, normalYSlope, normalZSlope, cameraXSlope, cameraYSlope, cameraZSlope;
 		while(leftBottom > 0.0 || rightBottom > 0.0){
 			fx = leftLerp.getLerpX();
 			fy = leftLerp.getLerpY();
@@ -114,11 +118,32 @@ public class FilledPolygonRenderer implements PolygonRenderer{
 			greenSlope = (greenRight*rightLerp.getLerpCsz() - greenLeft*leftLerp.getLerpCsz())/dx;
 			blueSlope = (blueRight*rightLerp.getLerpCsz() - blueLeft*leftLerp.getLerpCsz())/dx;
 
+			//new for assignment 4
+			normalX = leftLerp.getNormal().getX();
+			normalY = leftLerp.getNormal().getY();
+			normalZ = leftLerp.getNormal().getZ();
+			cameraX = leftLerp.getCameraPoint().getX();
+			cameraY = leftLerp.getCameraPoint().getY();
+			cameraZ = leftLerp.getCameraPoint().getZ();
+
+			normalXSlope = (rightLerp.getNormal().getX() - leftLerp.getNormal().getX())/dx;
+			normalYSlope = (rightLerp.getNormal().getY() - leftLerp.getNormal().getY())/dx;
+			normalZSlope = (rightLerp.getNormal().getZ() - leftLerp.getNormal().getZ())/dx;
+			cameraXSlope = (rightLerp.getCameraPoint().getX() - leftLerp.getCameraPoint().getX())/dx;
+			cameraYSlope = (rightLerp.getCameraPoint().getY() - leftLerp.getCameraPoint().getY())/dx;
+			cameraZSlope = (rightLerp.getCameraPoint().getZ() - leftLerp.getCameraPoint().getZ())/dx;
+
 			Vertex3D lerpVertex;
+
 			for(int i = 0; i < Math.abs(dx); i++){
 				Color color = new Color(red*(1.0/csz), green*(1.0/csz), blue*(1.0/csz));
+
 				lerpVertex = new Vertex3D(fx, fy, 1.0/csz, color);
+
+				if(hasNormal) lerpVertex.setNormal(new Point3DH(normalX, normalY, normalZ));
+				lerpVertex.setCameraPoint(new Point3DH(cameraX, cameraY, cameraZ));
 				color = pixelShader.shade(newPolygon, lerpVertex);
+
 				drawable.setPixel((int)Math.round(fx), (int)Math.round(fy), 1.0/csz, color.asARGB());
 
 				fx = fx + 1.0; //move over to the right so ADD the slopes
@@ -126,6 +151,14 @@ public class FilledPolygonRenderer implements PolygonRenderer{
 				red = red + redSlope;
 				green = green + greenSlope;
 				blue = blue + blueSlope;
+
+				//assn4
+				normalX = normalX + normalXSlope;
+				normalY = normalY + normalYSlope;
+				normalZ = normalZ + normalZSlope;
+				cameraX = cameraX + cameraXSlope;
+				cameraY = cameraY + cameraYSlope;
+				cameraZ = cameraZ + cameraZSlope;
 			}
 			if(!leftLerp.incrementDownwards()){
 				leftLerp = new Lerper(p2, p3); //this is how I flip things
@@ -158,6 +191,22 @@ public class FilledPolygonRenderer implements PolygonRenderer{
 		private final double greenSlope;
 		private final double blueSlope;
 
+		//new for assignment 4 (normal and CameraSpacePoint)
+		private double cameraX;
+		private double cameraY;
+		private double cameraZ;
+		private double normalX;
+		private double normalY;
+		private double normalZ;
+
+		private final double cameraXSlope;
+		private final double cameraYSlope;
+		private final double cameraZSlope;
+		private final double normalXSlope;
+		private final double normalYSlope;
+		private final double normalZSlope;
+
+
 		public Lerper(Vertex3D p1, Vertex3D p2){ //starting points
 			this.x = p1.getX();
 			this.y = p1.getY();
@@ -174,6 +223,21 @@ public class FilledPolygonRenderer implements PolygonRenderer{
 			this.greenSlope = (p2.getColor().getG()*(1.0/p2.getZ()) - p1.getColor().getG()*(1.0/p1.getZ()))/dy;
 			this.blueSlope = (p2.getColor().getB()*(1.0/p2.getZ()) - p1.getColor().getB()*(1.0/p1.getZ()))/dy;
 
+			//new for assignment 4 (not using perspective correct for this)
+			this.cameraX = p1.getCameraPoint().getX();
+			this.cameraY = p1.getCameraPoint().getY();
+			this.cameraZ = p1.getCameraPoint().getZ();
+			this.normalX = p1.getNormal().getX();
+			this.normalY = p1.getNormal().getY();
+			this.normalZ = p1.getNormal().getZ();
+
+			this.cameraXSlope = (p2.getCameraPoint().getX() - p1.getCameraPoint().getX())/dy;
+			this.cameraYSlope = (p2.getCameraPoint().getY() - p1.getCameraPoint().getY())/dy;
+			this.cameraZSlope = (p2.getCameraPoint().getZ() - p1.getCameraPoint().getZ())/dy;
+			this.normalXSlope = (p2.getNormal().getX() - p1.getNormal().getX())/dy;
+			this.normalYSlope = (p2.getNormal().getY() - p1.getNormal().getY())/dy;
+			this.normalZSlope = (p2.getNormal().getZ() - p1.getNormal().getZ())/dy;
+
 		}
 
 		public Boolean incrementDownwards(){ //SUBTRACT since we go downwards
@@ -185,6 +249,15 @@ public class FilledPolygonRenderer implements PolygonRenderer{
 			this.redValue = this.redValue - this.redSlope;
 			this.greenValue = this.greenValue - this.greenSlope;
 			this.blueValue = this.blueValue - this.blueSlope;
+
+			//new for assignment 4
+			this.cameraX = this.cameraX - this.cameraXSlope;
+			this.cameraY = this.cameraY - this.cameraYSlope;
+			this.cameraZ = this.cameraZ - this.cameraZSlope;
+			this.normalX = this.normalX - this.normalXSlope;
+			this.normalY = this.normalY - this.normalYSlope;
+			this.normalZ = this.normalZ - this.normalZSlope;
+
 			if(yCounter <= 0) return false;
 			return true;
 		}
@@ -206,6 +279,12 @@ public class FilledPolygonRenderer implements PolygonRenderer{
 		}
 		public double getLerpBlue(){
 			return this.blueValue;
+		}
+		public Point3DH getNormal(){
+			return new Point3DH(this.normalX, this.normalY, this.normalZ);
+		}
+		public Point3DH getCameraPoint(){
+			return new Point3DH(this.cameraX, this.cameraY, this.cameraZ);
 		}
 	}
 
